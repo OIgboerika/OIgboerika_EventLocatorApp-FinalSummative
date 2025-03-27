@@ -1,0 +1,81 @@
+{
+  "welcome": "Bienvenue sur Event Locator",
+  "auth": {
+    "register": {
+      "title": "S'inscrire",
+      "success": "Inscription réussie",
+      "emailExists": "L'email existe déjà"
+    },
+    "login": {
+      "title": "Se connecter",
+      "success": "Connexion réussie",
+      "invalidCredentials": "Email ou mot de passe invalide"
+    },
+    "profile": {
+      "title": "Profil",
+      "updateSuccess": "Profil mis à jour avec succès"
+    }
+  },
+  "events": {
+    "create": {
+      "title": "Créer un événement",
+      "success": "Événement créé avec succès"
+    },
+    "update": {
+      "title": "Mettre à jour l'événement",
+      "success": "Événement mis à jour avec succès"
+    },
+    "delete": {
+      "success": "Événement supprimé avec succès"
+    },
+    "search": {
+      "title": "Rechercher des événements",
+      "noResults": "Aucun événement trouvé"
+    }
+  },
+  "categories": {
+    "create": {
+      "title": "Créer une catégorie",
+      "success": "Catégorie créée avec succès"
+    },
+    "update": {
+      "title": "Mettre à jour la catégorie",
+      "success": "Catégorie mise à jour avec succès"
+    },
+    "delete": {
+      "success": "Catégorie supprimée avec succès"
+    }
+  },
+  "ratings": {
+    "create": {
+      "success": "Note ajoutée avec succès"
+    },
+    "update": {
+      "success": "Note mise à jour avec succès"
+    },
+    "delete": {
+      "success": "Note supprimée avec succès"
+    },
+    "alreadyRated": "Vous avez déjà noté cet événement"
+  },
+  "favorites": {
+    "add": {
+      "success": "Événement ajouté aux favoris"
+    },
+    "remove": {
+      "success": "Événement retiré des favoris"
+    },
+    "alreadyFavorite": "L'événement est déjà dans les favoris"
+  },
+  "notifications": {
+    "markRead": {
+      "success": "Notification marquée comme lue"
+    },
+    "markAllRead": {
+      "success": "Toutes les notifications marquées comme lues"
+    },
+    "delete": {
+      "success": "Notification supprimée avec succès"
+    }
+  }
+} 

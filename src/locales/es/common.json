@@ -1,0 +1,81 @@
+{
+  "welcome": "Bienvenido a Event Locator",
+  "auth": {
+    "register": {
+      "title": "Registrarse",
+      "success": "Registro exitoso",
+      "emailExists": "El correo electrónico ya existe"
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "success": "Inicio de sesión exitoso",
+      "invalidCredentials": "Correo electrónico o contraseña inválidos"
+    },
+    "profile": {
+      "title": "Perfil",
+      "updateSuccess": "Perfil actualizado exitosamente"
+    }
+  },
+  "events": {
+    "create": {
+      "title": "Crear Evento",
+      "success": "Evento creado exitosamente"
+    },
+    "update": {
+      "title": "Actualizar Evento",
+      "success": "Evento actualizado exitosamente"
+    },
+    "delete": {
+      "success": "Evento eliminado exitosamente"
+    },
+    "search": {
+      "title": "Buscar Eventos",
+      "noResults": "No se encontraron eventos"
+    }
+  },
+  "categories": {
+    "create": {
+      "title": "Crear Categoría",
+      "success": "Categoría creada exitosamente"
+    },
+    "update": {
+      "title": "Actualizar Categoría",
+      "success": "Categoría actualizada exitosamente"
+    },
+    "delete": {
+      "success": "Categoría eliminada exitosamente"
+    }
+  },
+  "ratings": {
+    "create": {
+      "success": "Calificación agregada exitosamente"
+    },
+    "update": {
+      "success": "Calificación actualizada exitosamente"
+    },
+    "delete": {
+      "success": "Calificación eliminada exitosamente"
+    },
+    "alreadyRated": "Ya has calificado este evento"
+  },
+  "favorites": {
+    "add": {
+      "success": "Evento agregado a favoritos"
+    },
+    "remove": {
+      "success": "Evento eliminado de favoritos"
+    },
+    "alreadyFavorite": "El evento ya está en favoritos"
+  },
+  "notifications": {
+    "markRead": {
+      "success": "Notificación marcada como leída"
+    },
+    "markAllRead": {
+      "success": "Todas las notificaciones marcadas como leídas"
+    },
+    "delete": {
+      "success": "Notificación eliminada exitosamente"
+    }
+  }
+} 

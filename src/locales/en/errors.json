@@ -1,0 +1,40 @@
+{
+  "common": {
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "serverError": "Internal server error",
+    "validationError": "Validation error"
+  },
+  "auth": {
+    "invalidToken": "Invalid authentication token",
+    "tokenExpired": "Authentication token has expired",
+    "invalidCredentials": "Invalid email or password",
+    "emailExists": "Email already exists",
+    "weakPassword": "Password is too weak"
+  },
+  "events": {
+    "notFound": "Event not found",
+    "unauthorized": "You are not authorized to perform this action on this event",
+    "invalidDate": "Invalid event date",
+    "capacityExceeded": "Event capacity has been exceeded"
+  },
+  "categories": {
+    "notFound": "Category not found",
+    "unauthorized": "You are not authorized to manage categories",
+    "hasEvents": "Cannot delete category with associated events"
+  },
+  "ratings": {
+    "notFound": "Rating not found",
+    "unauthorized": "You are not authorized to modify this rating",
+    "alreadyRated": "You have already rated this event"
+  },
+  "favorites": {
+    "notFound": "Favorite not found",
+    "alreadyFavorite": "Event is already in favorites"
+  },
+  "notifications": {
+    "notFound": "Notification not found",
+    "unauthorized": "You are not authorized to modify this notification"
+  }
+} 
