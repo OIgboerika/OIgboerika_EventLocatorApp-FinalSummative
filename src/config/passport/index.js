@@ -1,5 +1,6 @@
 const passport = require("passport");
-const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
+const JwtStrategy = require("passport-jwt").Strategy;
+const ExtractJwt = require("passport-jwt").ExtractJwt;
 const { User } = require("../../models");
 require("dotenv").config();
 
@@ -10,9 +11,9 @@ const options = {
 
 const setupPassport = () => {
   passport.use(
-    new JwtStrategy(options, async (payload, done) => {
+    new JwtStrategy(options, async (jwtPayload, done) => {
       try {
-        const user = await User.findById(payload.id);
+        const user = await User.findByPk(jwtPayload.id);
         if (user) {
           return done(null, user);
         }

@@ -8,7 +8,7 @@ const { errorHandler } = require("./middleware/errorHandler");
 const { setupDatabase } = require("./config/database");
 const { setupRedis } = require("./config/redis");
 const { setupPassport } = require("./config/passport");
-const { setupI18n, i18nMiddleware } = require("./config/i18n");
+const { setupI18n, i18nextMiddleware } = require("./config/i18n");
 const routes = require("./routes");
 const specs = require("./config/swagger");
 const swaggerUi = require("swagger-ui-express");
@@ -35,7 +35,7 @@ const initializeApp = async () => {
     app.use(morgan("dev"));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.use(i18nMiddleware);
+    app.use(i18nextMiddleware);
     app.use(passport.initialize());
 
     // API Documentation
@@ -92,6 +92,8 @@ const initializeApp = async () => {
     process.on("SIGTERM", shutdown);
     process.on("SIGINT", shutdown);
     process.on("SIGUSR2", shutdown);
+
+    return app;
   } catch (error) {
     console.error("Failed to initialize app:", error);
     process.exit(1);
