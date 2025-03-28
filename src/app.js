@@ -19,8 +19,13 @@ let server = null;
 // Initialize configurations
 const initializeApp = async () => {
   try {
+    // Setup database
     await setupDatabase();
+
+    // Setup Redis
     await setupRedis();
+
+    // Setup other services
     setupPassport();
     setupI18n();
 
@@ -51,7 +56,7 @@ const initializeApp = async () => {
     app.use(errorHandler);
 
     // Start server
-    const PORT = process.env.PORT || 3001;
+    const PORT = process.env.PORT || 10000;
     server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(

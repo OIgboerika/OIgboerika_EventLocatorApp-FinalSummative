@@ -1,36 +1,35 @@
-const Redis = require('redis');
-const config = require('./config');
+const Redis = require("ioredis");
+require("dotenv").config();
 
-const redisClient = Redis.createClient({
-  host: config.host,
-  port: config.port,
-  password: config.password
+const redisClient = new Redis({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+});
+
+redisClient.on("connect", () => {
+  console.log("Successfully connected to Redis!");
+});
+
+redisClient.on("error", (error) => {
+  console.error("Redis connection error:", error);
 });
 
 const setupRedis = async () => {
   try {
-    await redisClient.connect();
-    console.log('Redis connection established successfully.');
-    
-    // Subscribe to notification channel
-    await redisClient.subscribe('notifications', (message) => {
-      console.log('Received notification:', message);
-      // Handle notification (e.g., send email, push notification)
-      handleNotification(JSON.parse(message));
-    });
+    // Test the connection
+    await redisClient.ping();
+    console.log("Redis is ready!");
   } catch (error) {
-    console.error('Unable to connect to Redis:', error);
-    process.exit(1);
+    console.error("Redis setup failed:", error);
+    throw error;
   }
-};
-
-const handleNotification = async (notification) => {
-  // Implement notification handling logic here
-  // This could include sending emails, push notifications, etc.
-  console.log('Processing notification:', notification);
 };
 
 module.exports = {
   redisClient,
-  setupRedis
-}; 
+  setupRedis,
+};
