@@ -54,13 +54,20 @@ const initializeApp = async () => {
     // Error handling
     app.use(errorHandler);
 
+    // Add a root route handler
+    app.get("/", (req, res) => {
+      res.redirect("/api-docs");
+    });
+
     // Start server
     const PORT = process.env.PORT || 3000;
     server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(
-        `API Documentation available at http://localhost:${PORT}/api-docs`
-      );
+      const isProduction = process.env.NODE_ENV === "production";
+      const host = isProduction
+        ? process.env.RENDER_EXTERNAL_URL
+        : `http://localhost:${PORT}`;
+      console.log(`API Documentation available at ${host}/api-docs`);
     });
 
     // Handle server errors

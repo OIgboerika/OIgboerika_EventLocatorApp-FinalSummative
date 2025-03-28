@@ -37,3 +37,4 @@ dump.rdb
 
 # MongoDB data
 data/db/
+.qodo
