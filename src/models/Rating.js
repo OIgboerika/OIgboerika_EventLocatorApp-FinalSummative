@@ -1,36 +1,52 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/database");
 
-const ratingSchema = new mongoose.Schema(
+const Rating = sequelize.define(
+  "Rating",
   {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    eventId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "Events",
+        key: "id",
+      },
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "Users",
+        key: "id",
+      },
+    },
     rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1,
+        max: 5,
+      },
     },
-    review: {
-      type: String,
-      trim: true,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    event: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Event",
-      required: true,
+    comment: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["eventId", "userId"],
+      },
+    ],
   }
 );
-
-// Compound index to ensure one rating per user per event
-ratingSchema.index({ user: 1, event: 1 }, { unique: true });
-
-const Rating = mongoose.model("Rating", ratingSchema);
 
 module.exports = Rating;

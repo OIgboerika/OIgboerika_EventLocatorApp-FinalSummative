@@ -1,98 +1,82 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/database");
 
-const eventSchema = new mongoose.Schema(
+const Event = sequelize.define(
+  "Event",
   {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
     title: {
-      type: String,
-      required: true,
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
-      type: String,
-      required: true,
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false,
     },
     location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        required: true,
-      },
-      coordinates: {
-        type: [Number],
-        required: true,
-      },
+      type: DataTypes.GEOMETRY("POINT"),
+      allowNull: false,
     },
     address: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    startDate: {
-      type: Date,
-      required: true,
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    endDate: {
-      type: Date,
-      required: true,
-    },
-    capacity: {
-      type: Number,
+    organizer: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "Users",
+        key: "id",
+      },
     },
     price: {
-      type: Number,
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0,
+    },
+    capacity: {
+      type: DataTypes.INTEGER,
+      defaultValue: null,
     },
     imageUrl: {
-      type: String,
+      type: DataTypes.STRING,
+      defaultValue: null,
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     status: {
-      type: String,
-      enum: ["draft", "published", "cancelled", "completed"],
-      default: "draft",
+      type: DataTypes.ENUM("draft", "published", "cancelled"),
+      defaultValue: "draft",
     },
-    averageRating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-    totalRatings: {
-      type: Number,
-      default: 0,
-    },
-    creator: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    categories: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-      },
-    ],
   },
   {
     timestamps: true,
+    indexes: [
+      {
+        fields: ["location"],
+        using: "GIST",
+      },
+      {
+        fields: ["category"],
+      },
+      {
+        fields: ["date"],
+      },
+    ],
   }
 );
-
-// Indexes
-eventSchema.index({ location: "2dsphere" });
-eventSchema.index({ startDate: 1 });
-eventSchema.index({ status: 1 });
-
-// Virtual for duration
-eventSchema.virtual("duration").get(function () {
-  return this.endDate - this.startDate;
-});
-
-// Method to update average rating
-eventSchema.methods.updateRating = async function (rating) {
-  this.totalRatings += 1;
-  this.averageRating =
-    (this.averageRating * (this.totalRatings - 1) + rating) / this.totalRatings;
-  await this.save();
-};
-
-const Event = mongoose.model("Event", eventSchema);
 
 module.exports = Event;
