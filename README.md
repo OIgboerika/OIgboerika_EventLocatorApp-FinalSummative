@@ -1,6 +1,6 @@
-# Event Locator Application
+# Event Locator API
 
-A multi-user event locator application built with Node.js that allows users to discover events based on location and preferences.
+A platform for discovering and managing local events.
 
 ## Features
 
@@ -18,7 +18,7 @@ A multi-user event locator application built with Node.js that allows users to d
 ## Tech Stack
 
 - **Backend**: Node.js with Express.js
-- **Database**: PostgreSQL with PostGIS
+- **Database**: MongoDB
 - **Authentication**: Passport.js with JWT
 - **Message Queue**: Redis Pub/Sub
 - **Internationalization**: i18next
@@ -27,10 +27,24 @@ A multi-user event locator application built with Node.js that allows users to d
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
-- PostgreSQL (v12 or higher) with PostGIS extension
+- Node.js >= 18.0.0
+- MongoDB
 - Redis
-- Google Maps API key
+- Render.com account
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+NODE_ENV=production
+PORT=10000
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+REDIS_HOST=your_redis_host
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+```
 
 ## Project Structure
 
@@ -52,29 +66,54 @@ event-locator/
 └── README.md           # Project documentation
 ```
 
-## Setup Instructions
+## Deployment to Render.com
 
-1. Clone the repository
-2. Install dependencies:
+1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
+
+2. Create a new Web Service on Render.com:
+
+   - Connect your repository
+   - Set the following:
+     - Name: event-locator-api
+     - Environment: Node
+     - Build Command: `npm install`
+     - Start Command: `npm start`
+     - Node Version: 18.x
+
+3. Add the following environment variables in Render.com:
+
+   - `NODE_ENV`: production
+   - `MONGODB_URI`: Your MongoDB connection string
+   - `JWT_SECRET`: Your JWT secret key
+   - `REDIS_HOST`: Your Redis host
+   - `REDIS_PORT`: 6379
+   - `REDIS_PASSWORD`: Your Redis password
+   - `PORT`: 10000
+
+4. Deploy your application
+
+## Local Development
+
+1. Install dependencies:
+
    ```bash
    npm install
    ```
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-4. Set up the database:
-   ```bash
-   npm run db:setup
-   ```
-5. Run migrations:
-   ```bash
-   npm run migrate
-   ```
-6. Start the development server:
+
+2. Start the development server:
+
    ```bash
    npm run dev
    ```
+
+3. Access the API documentation at:
+   ```
+   http://localhost:3001/api-docs
+   ```
+
+## API Documentation
+
+The API documentation is available at `/api-docs` endpoint when the server is running.
 
 ## Testing
 
@@ -84,18 +123,12 @@ Run tests:
 npm test
 ```
 
-## API Documentation
+Run tests with coverage:
 
-API documentation is available at `/api-docs` when running the server.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+```bash
+npm run test:coverage
+```
 
 ## License
 
-This project is licensed under the MIT License.
+ISC

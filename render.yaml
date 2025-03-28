@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: event-locator-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: event_locator_db
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: REDIS_HOST
+        value: redis://your-redis-host
+      - key: REDIS_PORT
+        value: 6379
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: PORT
+        value: 10000
+
+databases:
+  - name: event_locator_db
+    databaseName: event_locator
+    user: event_locator_user
+    plan: free 
