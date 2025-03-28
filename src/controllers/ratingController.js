@@ -5,7 +5,7 @@ const createRating = async (req, res) => {
     const { eventId, rating, review } = req.body;
 
     // Check if event exists
-    const event = await Event.findByPk(eventId);
+    const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({
         status: "error",
@@ -15,10 +15,8 @@ const createRating = async (req, res) => {
 
     // Check if user has already rated this event
     const existingRating = await Rating.findOne({
-      where: {
-        userId: req.user.id,
-        eventId,
-      },
+      user: req.user._id,
+      event: eventId,
     });
 
     if (existingRating) {
@@ -30,36 +28,20 @@ const createRating = async (req, res) => {
 
     // Create rating
     const newRating = await Rating.create({
-      userId: req.user.id,
-      eventId,
+      user: req.user._id,
+      event: eventId,
       rating,
       review,
     });
 
     // Update event's average rating and total ratings
-    const eventRatings = await Rating.findAll({
-      where: { eventId },
-    });
-
-    const totalRatings = eventRatings.length;
-    const averageRating =
-      eventRatings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings;
-
-    await event.update({
-      averageRating,
-      totalRatings,
-    });
+    await event.updateRating(rating);
 
     // Fetch rating with user details
-    const ratingWithUser = await Rating.findByPk(newRating.id, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "firstName", "lastName"],
-        },
-      ],
-    });
+    const ratingWithUser = await Rating.findById(newRating._id).populate(
+      "user",
+      "firstName lastName"
+    );
 
     res.status(201).json({
       status: "success",
@@ -78,7 +60,7 @@ const updateRating = async (req, res) => {
     const { rating, review } = req.body;
     const ratingId = req.params.id;
 
-    const existingRating = await Rating.findByPk(ratingId);
+    const existingRating = await Rating.findById(ratingId);
     if (!existingRating) {
       return res.status(404).json({
         status: "error",
@@ -87,47 +69,37 @@ const updateRating = async (req, res) => {
     }
 
     // Check if user owns this rating
-    if (existingRating.userId !== req.user.id) {
+    if (!existingRating.user.equals(req.user._id)) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to update this rating",
       });
     }
 
-    await existingRating.update({
-      rating,
-      review,
-    });
+    // Update rating
+    existingRating.rating = rating;
+    existingRating.review = review;
+    await existingRating.save();
 
     // Update event's average rating
-    const eventRatings = await Rating.findAll({
-      where: { eventId: existingRating.eventId },
-    });
+    const event = await Event.findById(existingRating.event);
+    if (event) {
+      // Recalculate average rating
+      const ratings = await Rating.find({ event: event._id });
+      const totalRatings = ratings.length;
+      const averageRating =
+        ratings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings;
 
-    const totalRatings = eventRatings.length;
-    const averageRating =
-      eventRatings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings;
-
-    await Event.update(
-      {
-        averageRating,
-        totalRatings,
-      },
-      {
-        where: { id: existingRating.eventId },
-      }
-    );
+      event.averageRating = averageRating;
+      event.totalRatings = totalRatings;
+      await event.save();
+    }
 
     // Fetch updated rating with user details
-    const updatedRating = await Rating.findByPk(ratingId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "firstName", "lastName"],
-        },
-      ],
-    });
+    const updatedRating = await Rating.findById(ratingId).populate(
+      "user",
+      "firstName lastName"
+    );
 
     res.json({
       status: "success",
@@ -143,7 +115,9 @@ const updateRating = async (req, res) => {
 
 const deleteRating = async (req, res) => {
   try {
-    const rating = await Rating.findByPk(req.params.id);
+    const ratingId = req.params.id;
+
+    const rating = await Rating.findById(ratingId);
     if (!rating) {
       return res.status(404).json({
         status: "error",
@@ -152,37 +126,34 @@ const deleteRating = async (req, res) => {
     }
 
     // Check if user owns this rating
-    if (rating.userId !== req.user.id) {
+    if (!rating.user.equals(req.user._id)) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to delete this rating",
       });
     }
 
-    const eventId = rating.eventId;
-    await rating.destroy();
+    // Store event ID before deleting rating
+    const eventId = rating.event;
+
+    // Delete rating
+    await rating.remove();
 
     // Update event's average rating
-    const eventRatings = await Rating.findAll({
-      where: { eventId },
-    });
+    const event = await Event.findById(eventId);
+    if (event) {
+      // Recalculate average rating
+      const ratings = await Rating.find({ event: eventId });
+      const totalRatings = ratings.length;
+      const averageRating =
+        totalRatings > 0
+          ? ratings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings
+          : 0;
 
-    const totalRatings = eventRatings.length;
-    const averageRating =
-      totalRatings > 0
-        ? eventRatings.reduce((acc, curr) => acc + curr.rating, 0) /
-          totalRatings
-        : 0;
-
-    await Event.update(
-      {
-        averageRating,
-        totalRatings,
-      },
-      {
-        where: { id: eventId },
-      }
-    );
+      event.averageRating = averageRating;
+      event.totalRatings = totalRatings;
+      await event.save();
+    }
 
     res.json({
       status: "success",
@@ -198,17 +169,11 @@ const deleteRating = async (req, res) => {
 
 const getEventRatings = async (req, res) => {
   try {
-    const ratings = await Rating.findAll({
-      where: { eventId: req.params.eventId },
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "firstName", "lastName"],
-        },
-      ],
-      order: [["createdAt", "DESC"]],
-    });
+    const { eventId } = req.params;
+
+    const ratings = await Rating.find({ event: eventId })
+      .populate("user", "firstName lastName")
+      .sort({ createdAt: -1 });
 
     res.json({
       status: "success",

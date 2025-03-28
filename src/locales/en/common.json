@@ -1,81 +1,62 @@
 {
   "welcome": "Welcome to Event Locator",
-  "auth": {
-    "register": {
-      "title": "Register",
-      "success": "Registration successful",
-      "emailExists": "Email already exists"
-    },
-    "login": {
-      "title": "Login",
-      "success": "Login successful",
-      "invalidCredentials": "Invalid email or password"
-    },
-    "profile": {
-      "title": "Profile",
-      "updateSuccess": "Profile updated successfully"
-    }
-  },
-  "events": {
-    "create": {
-      "title": "Create Event",
-      "success": "Event created successfully"
-    },
-    "update": {
-      "title": "Update Event",
-      "success": "Event updated successfully"
-    },
-    "delete": {
-      "success": "Event deleted successfully"
-    },
-    "search": {
-      "title": "Search Events",
-      "noResults": "No events found"
-    }
-  },
-  "categories": {
-    "create": {
-      "title": "Create Category",
-      "success": "Category created successfully"
-    },
-    "update": {
-      "title": "Update Category",
-      "success": "Category updated successfully"
-    },
-    "delete": {
-      "success": "Category deleted successfully"
-    }
-  },
-  "ratings": {
-    "create": {
-      "success": "Rating added successfully"
-    },
-    "update": {
-      "success": "Rating updated successfully"
-    },
-    "delete": {
-      "success": "Rating deleted successfully"
-    },
-    "alreadyRated": "You have already rated this event"
-  },
-  "favorites": {
-    "add": {
-      "success": "Event added to favorites"
-    },
-    "remove": {
-      "success": "Event removed from favorites"
-    },
-    "alreadyFavorite": "Event is already in favorites"
-  },
-  "notifications": {
-    "markRead": {
-      "success": "Notification marked as read"
-    },
-    "markAllRead": {
-      "success": "All notifications marked as read"
-    },
-    "delete": {
-      "success": "Notification deleted successfully"
-    }
-  }
-} 
+  "events": "Events",
+  "categories": "Categories",
+  "favorites": "Favorites",
+  "profile": "Profile",
+  "settings": "Settings",
+  "logout": "Logout",
+  "search": "Search",
+  "noEvents": "No events found",
+  "noCategories": "No categories found",
+  "noFavorites": "No favorite events yet",
+  "addToFavorites": "Add to favorites",
+  "removeFromFavorites": "Remove from favorites",
+  "rating": "Rating",
+  "reviews": "Reviews",
+  "capacity": "Capacity",
+  "price": "Price",
+  "free": "Free",
+  "location": "Location",
+  "date": "Date",
+  "time": "Time",
+  "description": "Description",
+  "organizer": "Organizer",
+  "contact": "Contact",
+  "share": "Share",
+  "report": "Report",
+  "edit": "Edit",
+  "delete": "Delete",
+  "save": "Save",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "back": "Back",
+  "next": "Next",
+  "previous": "Previous",
+  "more": "More",
+  "less": "Less",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success",
+  "warning": "Warning",
+  "info": "Information",
+  "required": "Required",
+  "optional": "Optional",
+  "all": "All",
+  "none": "None",
+  "select": "Select",
+  "clear": "Clear",
+  "filter": "Filter",
+  "sort": "Sort",
+  "view": "View",
+  "hide": "Hide",
+  "show": "Show",
+  "close": "Close",
+  "open": "Open",
+  "searchPlaceholder": "Search events...",
+  "noResults": "No results found",
+  "tryAgain": "Try again",
+  "refresh": "Refresh",
+  "loadMore": "Load more",
+  "noMore": "No more items"
+}

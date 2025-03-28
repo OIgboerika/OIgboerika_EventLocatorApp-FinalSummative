@@ -1,41 +1,19 @@
-const { Sequelize } = require('sequelize');
-const config = require('./config');
-
-const sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
-  {
-    host: config.host,
-    port: config.port,
-    dialect: 'postgres',
-    logging: config.logging,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
-  }
-);
+const mongoose = require("mongoose");
+require("dotenv").config();
 
 const setupDatabase = async () => {
   try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully.');
-    
-    // Sync database (in development)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('Database synchronized.');
-    }
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("MongoDB connection established successfully.");
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error("Unable to connect to MongoDB:", error);
     process.exit(1);
   }
 };
 
 module.exports = {
-  sequelize,
-  setupDatabase
-}; 
+  setupDatabase,
+};

@@ -1,11 +1,11 @@
-const { Favorite, Event } = require("../models");
+const { Favorite, Event, Category } = require("../models");
 
 const addFavorite = async (req, res) => {
   try {
     const { eventId } = req.body;
 
     // Check if event exists
-    const event = await Event.findByPk(eventId);
+    const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({
         status: "error",
@@ -15,10 +15,8 @@ const addFavorite = async (req, res) => {
 
     // Check if already favorited
     const existingFavorite = await Favorite.findOne({
-      where: {
-        userId: req.user.id,
-        eventId,
-      },
+      user: req.user._id,
+      event: eventId,
     });
 
     if (existingFavorite) {
@@ -29,9 +27,9 @@ const addFavorite = async (req, res) => {
     }
 
     // Add to favorites
-    const favorite = await Favorite.create({
-      userId: req.user.id,
-      eventId,
+    await Favorite.create({
+      user: req.user._id,
+      event: eventId,
     });
 
     res.status(201).json({
@@ -49,10 +47,8 @@ const addFavorite = async (req, res) => {
 const removeFavorite = async (req, res) => {
   try {
     const favorite = await Favorite.findOne({
-      where: {
-        userId: req.user.id,
-        eventId: req.params.eventId,
-      },
+      user: req.user._id,
+      event: req.params.eventId,
     });
 
     if (!favorite) {
@@ -62,7 +58,7 @@ const removeFavorite = async (req, res) => {
       });
     }
 
-    await favorite.destroy();
+    await favorite.remove();
 
     res.json({
       status: "success",
@@ -78,29 +74,18 @@ const removeFavorite = async (req, res) => {
 
 const getFavorites = async (req, res) => {
   try {
-    const favorites = await Favorite.findAll({
-      where: { userId: req.user.id },
-      include: [
-        {
-          model: Event,
-          as: "event",
-          include: [
-            {
-              model: Category,
-              as: "categories",
-              through: { attributes: [] },
-            },
-          ],
+    const favorites = await Favorite.find({ user: req.user._id })
+      .populate({
+        path: "event",
+        populate: {
+          path: "categories",
         },
-      ],
-      order: [["createdAt", "DESC"]],
-    });
+      })
+      .sort({ createdAt: -1 });
 
     res.json({
       status: "success",
-      data: {
-        favorites: favorites.map((fav) => fav.event),
-      },
+      data: { favorites },
     });
   } catch (error) {
     res.status(400).json({

@@ -1,5 +1,4 @@
 const { Event, Category, User, Rating } = require("../models");
-const { Op } = require("sequelize");
 
 const createEvent = async (req, res) => {
   try {
@@ -26,28 +25,18 @@ const createEvent = async (req, res) => {
       capacity,
       price,
       imageUrl,
-      creatorId: req.user.id,
+      creator: req.user._id,
+      categories: categoryIds || [],
     });
 
-    // Add categories if provided
-    if (categoryIds && categoryIds.length > 0) {
-      await event.setCategories(categoryIds);
-    }
-
-    // Fetch event with categories
-    const eventWithCategories = await Event.findByPk(event.id, {
-      include: [
-        {
-          model: Category,
-          as: "categories",
-          through: { attributes: [] },
-        },
-      ],
-    });
+    // Fetch event with populated fields
+    const eventWithDetails = await Event.findById(event._id)
+      .populate("categories")
+      .populate("creator", "firstName lastName");
 
     res.status(201).json({
       status: "success",
-      data: { event: eventWithCategories },
+      data: { event: eventWithDetails },
     });
   } catch (error) {
     res.status(400).json({
@@ -69,44 +58,43 @@ const getEvents = async (req, res) => {
       endDate,
     } = req.query;
 
-    const where = {};
-    if (category) where["$categories.name$"] = category;
-    if (status) where.status = status;
+    const query = {};
+
+    if (category) {
+      const categoryDoc = await Category.findOne({ name: category });
+      if (categoryDoc) {
+        query.categories = categoryDoc._id;
+      }
+    }
+
+    if (status) query.status = status;
     if (search) {
-      where[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } },
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
       ];
     }
-    if (startDate) where.startDate = { [Op.gte]: startDate };
-    if (endDate) where.endDate = { [Op.lte]: endDate };
+    if (startDate) query.startDate = { $gte: new Date(startDate) };
+    if (endDate) query.endDate = { $lte: new Date(endDate) };
 
-    const events = await Event.findAndCountAll({
-      where,
-      include: [
-        {
-          model: Category,
-          as: "categories",
-          through: { attributes: [] },
-        },
-        {
-          model: User,
-          as: "creator",
-          attributes: ["id", "firstName", "lastName"],
-        },
-      ],
-      limit: parseInt(limit),
-      offset: (page - 1) * limit,
-      order: [["startDate", "ASC"]],
-    });
+    const events = await Event.find(query)
+      .populate("categories")
+      .populate("creator", "firstName lastName")
+      .sort({ startDate: 1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await Event.countDocuments(query);
 
     res.json({
       status: "success",
       data: {
-        events: events.rows,
-        total: events.count,
-        pages: Math.ceil(events.count / limit),
-        currentPage: parseInt(page),
+        events,
+        pagination: {
+          total,
+          page: parseInt(page),
+          pages: Math.ceil(total / limit),
+        },
       },
     });
   } catch (error) {
@@ -119,31 +107,9 @@ const getEvents = async (req, res) => {
 
 const getEventById = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id, {
-      include: [
-        {
-          model: Category,
-          as: "categories",
-          through: { attributes: [] },
-        },
-        {
-          model: User,
-          as: "creator",
-          attributes: ["id", "firstName", "lastName"],
-        },
-        {
-          model: Rating,
-          as: "ratings",
-          include: [
-            {
-              model: User,
-              as: "user",
-              attributes: ["id", "firstName", "lastName"],
-            },
-          ],
-        },
-      ],
-    });
+    const event = await Event.findById(req.params.id)
+      .populate("categories")
+      .populate("creator", "firstName lastName");
 
     if (!event) {
       return res.status(404).json({
@@ -166,7 +132,8 @@ const getEventById = async (req, res) => {
 
 const updateEvent = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id);
+    const event = await Event.findById(req.params.id);
+
     if (!event) {
       return res.status(404).json({
         status: "error",
@@ -174,56 +141,19 @@ const updateEvent = async (req, res) => {
       });
     }
 
-    // Check if user is creator or admin
-    if (event.creatorId !== req.user.id && !req.user.isAdmin) {
+    // Check if user is the creator or admin
+    if (!event.creator.equals(req.user._id) && !req.user.isAdmin) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to update this event",
       });
     }
 
-    const {
-      title,
-      description,
-      location,
-      address,
-      startDate,
-      endDate,
-      capacity,
-      price,
-      imageUrl,
-      status,
-      categoryIds,
-    } = req.body;
-
-    await event.update({
-      title,
-      description,
-      location,
-      address,
-      startDate,
-      endDate,
-      capacity,
-      price,
-      imageUrl,
-      status,
-    });
-
-    // Update categories if provided
-    if (categoryIds) {
-      await event.setCategories(categoryIds);
-    }
-
-    // Fetch updated event with categories
-    const updatedEvent = await Event.findByPk(event.id, {
-      include: [
-        {
-          model: Category,
-          as: "categories",
-          through: { attributes: [] },
-        },
-      ],
-    });
+    const updatedEvent = await Event.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, categories: req.body.categoryIds },
+      { new: true, runValidators: true }
+    ).populate("categories");
 
     res.json({
       status: "success",
@@ -239,7 +169,8 @@ const updateEvent = async (req, res) => {
 
 const deleteEvent = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id);
+    const event = await Event.findById(req.params.id);
+
     if (!event) {
       return res.status(404).json({
         status: "error",
@@ -247,15 +178,15 @@ const deleteEvent = async (req, res) => {
       });
     }
 
-    // Check if user is creator or admin
-    if (event.creatorId !== req.user.id && !req.user.isAdmin) {
+    // Check if user is the creator or admin
+    if (!event.creator.equals(req.user._id) && !req.user.isAdmin) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to delete this event",
       });
     }
 
-    await event.destroy();
+    await event.remove();
 
     res.json({
       status: "success",
@@ -272,31 +203,20 @@ const deleteEvent = async (req, res) => {
 const searchNearbyEvents = async (req, res) => {
   try {
     const { latitude, longitude, radius = 10 } = req.query;
-    const radiusInMeters = radius * 1000; // Convert km to meters
 
-    const events = await Event.findAll({
-      where: {
-        location: {
-          [Op.dwithin]: {
+    const events = await Event.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
-            distance: radiusInMeters,
           },
+          $maxDistance: radius * 1000, // Convert km to meters
         },
       },
-      include: [
-        {
-          model: Category,
-          as: "categories",
-          through: { attributes: [] },
-        },
-        {
-          model: User,
-          as: "creator",
-          attributes: ["id", "firstName", "lastName"],
-        },
-      ],
-      order: [["startDate", "ASC"]],
-    });
+    })
+      .populate("categories")
+      .populate("creator", "firstName lastName");
 
     res.json({
       status: "success",

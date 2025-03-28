@@ -1,31 +1,26 @@
-const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/database");
+const mongoose = require("mongoose");
 
-const Favorite = sequelize.define(
-  "Favorite",
+const favoriteSchema = new mongoose.Schema(
   {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    eventId: {
-      type: DataTypes.UUID,
-      allowNull: false,
+    event: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      required: true,
     },
   },
   {
-    indexes: [
-      {
-        unique: true,
-        fields: ["userId", "eventId"],
-      },
-    ],
+    timestamps: true,
   }
 );
+
+// Compound index to ensure one favorite per user per event
+favoriteSchema.index({ user: 1, event: 1 }, { unique: true });
+
+const Favorite = mongoose.model("Favorite", favoriteSchema);
 
 module.exports = Favorite;
