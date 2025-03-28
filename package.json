@@ -13,7 +13,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "prepare": "husky install",
-    "test:db": "node src/config/database/testConnection.js"
+    "test:db": "node src/config/database/testConnection.js",
+    "test:redis": "node src/config/redis/testConnection.js"
   },
   "engines": {
     "node": ">=18.0.0"

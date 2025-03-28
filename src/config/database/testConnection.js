@@ -1,25 +1,54 @@
-const mongoose = require("mongoose");
+const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
 const testConnection = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Successfully connected to MongoDB.");
+    const sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: "postgres",
+      logging: false,
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? {
+              require: true,
+              rejectUnauthorized: false,
+            }
+          : false,
+    });
 
-    // Test creating a collection
-    const testCollection = mongoose.connection.collection("test");
-    await testCollection.insertOne({ test: "connection successful" });
-    console.log("Successfully created and inserted into test collection.");
+    await sequelize.authenticate();
+    console.log("Database connection successful!");
+
+    // Test creating a table
+    const Test = sequelize.define("Test", {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: {
+        type: Sequelize.STRING,
+      },
+    });
+
+    await Test.sync({ force: true });
+    console.log("Test table created successfully!");
+
+    // Test inserting data
+    await Test.create({ name: "test" });
+    console.log("Data inserted successfully!");
+
+    // Test querying data
+    const result = await Test.findAll();
+    console.log("Query result:", result);
 
     // Clean up
-    await testCollection.drop();
-    console.log("Test collection cleaned up.");
+    await Test.drop();
+    console.log("Test table dropped successfully!");
 
-    // Close connection
-    await mongoose.connection.close();
-    console.log("Connection closed successfully.");
+    await sequelize.close();
+    console.log("Connection closed successfully!");
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    console.error("Database connection failed:", error);
   }
 };
 
