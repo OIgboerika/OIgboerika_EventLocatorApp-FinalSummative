@@ -99,6 +99,4 @@ const initializeApp = async () => {
   }
 };
 
-initializeApp();
-
-module.exports = app;
+module.exports = initializeApp;
