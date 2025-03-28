@@ -8,7 +8,7 @@ const { errorHandler } = require("./middleware/errorHandler");
 const { setupDatabase } = require("./config/database");
 const { setupRedis } = require("./config/redis");
 const { setupPassport } = require("./config/passport");
-const { setupI18n, i18nextMiddleware } = require("./config/i18n");
+const { setupI18n } = require("./config/i18n");
 const routes = require("./routes");
 const specs = require("./config/swagger");
 const swaggerUi = require("swagger-ui-express");
@@ -27,7 +27,7 @@ const initializeApp = async () => {
 
     // Setup other services
     setupPassport();
-    setupI18n();
+    await setupI18n();
 
     // Middleware
     app.use(helmet());
@@ -35,7 +35,6 @@ const initializeApp = async () => {
     app.use(morgan("dev"));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.use(i18nextMiddleware);
     app.use(passport.initialize());
 
     // API Documentation
