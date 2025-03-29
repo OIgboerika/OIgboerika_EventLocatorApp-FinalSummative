@@ -29,13 +29,36 @@ const initializeApp = async () => {
     setupPassport();
     await setupI18n();
 
+    // CORS configuration
+    const corsOptions = {
+      origin:
+        process.env.NODE_ENV === "production"
+          ? [
+              "https://oigboerika-eventlocatorapp.onrender.com",
+              /\.onrender\.com$/,
+            ]
+          : ["http://localhost:3000", "http://localhost:10000"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+      allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
+      credentials: true,
+      optionsSuccessStatus: 200,
+    };
+
     // Middleware
-    app.use(helmet());
-    app.use(cors());
+    app.use(cors(corsOptions));
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+      })
+    );
     app.use(morgan("dev"));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(passport.initialize());
+
+    // Enable pre-flight requests for all routes
+    app.options("*", cors(corsOptions));
 
     // API Documentation
     app.use(
@@ -45,6 +68,10 @@ const initializeApp = async () => {
         explorer: true,
         customCss: ".swagger-ui .topbar { display: none }",
         customSiteTitle: "Event Locator API Documentation",
+        swaggerOptions: {
+          persistAuthorization: true,
+          tryItOutEnabled: true,
+        },
       })
     );
 
