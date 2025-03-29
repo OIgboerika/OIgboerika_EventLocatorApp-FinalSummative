@@ -12,8 +12,8 @@ const options = {
       {
         url:
           process.env.NODE_ENV === "production"
-            ? "https://oigboerika-eventlocatorapp.onrender.com"
-            : "http://localhost:3000",
+            ? "https://oigboerika-eventlocatorapp.onrender.com/api"
+            : "http://localhost:3000/api",
         description:
           process.env.NODE_ENV === "production"
             ? "Production server"
