@@ -1,4 +1,4 @@
-const { Category, Event } = require("../models");
+const { Category, Event, User } = require("../models");
 
 const createCategory = async (req, res) => {
   try {
@@ -24,7 +24,9 @@ const createCategory = async (req, res) => {
 
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().sort({ name: 1 });
+    const categories = await Category.findAll({
+      order: [["name", "ASC"]],
+    });
 
     res.json({
       status: "success",
@@ -40,7 +42,7 @@ const getCategories = async (req, res) => {
 
 const getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findByPk(req.params.id);
 
     if (!category) {
       return res.status(404).json({
@@ -50,10 +52,16 @@ const getCategoryById = async (req, res) => {
     }
 
     // Get events in this category
-    const events = await Event.find({ categories: category._id }).populate(
-      "creator",
-      "firstName lastName"
-    );
+    const events = await Event.findAll({
+      where: { category: category.id },
+      include: [
+        {
+          model: User,
+          as: "organizer",
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
 
     res.json({
       status: "success",
@@ -72,10 +80,7 @@ const getCategoryById = async (req, res) => {
 
 const updateCategory = async (req, res) => {
   try {
-    const category = await Category.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const category = await Category.findByPk(req.params.id);
 
     if (!category) {
       return res.status(404).json({
@@ -83,6 +88,8 @@ const updateCategory = async (req, res) => {
         message: "Category not found",
       });
     }
+
+    await category.update(req.body);
 
     res.json({
       status: "success",
@@ -98,7 +105,7 @@ const updateCategory = async (req, res) => {
 
 const deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findByIdAndDelete(req.params.id);
+    const category = await Category.findByPk(req.params.id);
 
     if (!category) {
       return res.status(404).json({
@@ -108,10 +115,12 @@ const deleteCategory = async (req, res) => {
     }
 
     // Remove category from all events
-    await Event.updateMany(
-      { categories: category._id },
-      { $pull: { categories: category._id } }
+    await Event.update(
+      { category: null },
+      { where: { category: category.id } }
     );
+
+    await category.destroy();
 
     res.json({
       status: "success",
