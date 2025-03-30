@@ -25,7 +25,7 @@ const createEvent = async (req, res) => {
       price,
       capacity,
       imageUrl,
-      organizer: req.user.id,
+      organizerId: req.user.id,
     });
 
     // Fetch event with organizer details
@@ -164,7 +164,7 @@ const updateEvent = async (req, res) => {
     }
 
     // Check if user is the organizer or admin
-    if (event.organizer !== req.user.id && !req.user.isAdmin) {
+    if (event.organizerId !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to update this event",
@@ -208,7 +208,7 @@ const deleteEvent = async (req, res) => {
     }
 
     // Check if user is the organizer or admin
-    if (event.organizer !== req.user.id && !req.user.isAdmin) {
+    if (event.organizerId !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to delete this event",

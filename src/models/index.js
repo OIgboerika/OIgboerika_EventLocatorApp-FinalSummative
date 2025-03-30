@@ -7,11 +7,11 @@ const Favorite = require("./Favorite");
 
 // Define associations
 User.hasMany(Event, {
-  foreignKey: "organizer",
+  foreignKey: "organizerId",
   as: "organizedEvents",
 });
 Event.belongsTo(User, {
-  foreignKey: "organizer",
+  foreignKey: "organizerId",
   as: "organizer",
 });
 

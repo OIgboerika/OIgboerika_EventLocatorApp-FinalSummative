@@ -40,7 +40,7 @@ const Event = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    organizer: {
+    organizerId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
