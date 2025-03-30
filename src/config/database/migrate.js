@@ -6,9 +6,9 @@ const runMigrations = async () => {
     await sequelize.authenticate();
     console.log("Database connection established successfully.");
 
-    // Run migrations
-    await sequelize.sync({ force: false });
-    console.log("Database synchronized successfully.");
+    // Run migrations - create tables if they don't exist
+    await sequelize.sync({ force: false, alter: false });
+    console.log("Database tables synchronized successfully.");
   } catch (error) {
     console.error("Unable to run migrations:", error);
     process.exit(1);
