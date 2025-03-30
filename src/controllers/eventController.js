@@ -1,4 +1,5 @@
 const { Event, Category, User, Rating } = require("../models");
+const { Op } = require("sequelize");
 
 const createEvent = async (req, res) => {
   try {
@@ -7,12 +8,11 @@ const createEvent = async (req, res) => {
       description,
       location,
       address,
-      startDate,
-      endDate,
-      capacity,
+      date,
+      category,
       price,
+      capacity,
       imageUrl,
-      categoryIds,
     } = req.body;
 
     const event = await Event.create({
@@ -20,19 +20,24 @@ const createEvent = async (req, res) => {
       description,
       location,
       address,
-      startDate,
-      endDate,
-      capacity,
+      date,
+      category,
       price,
+      capacity,
       imageUrl,
-      creator: req.user._id,
-      categories: categoryIds || [],
+      organizer: req.user.id,
     });
 
-    // Fetch event with populated fields
-    const eventWithDetails = await Event.findById(event._id)
-      .populate("categories")
-      .populate("creator", "firstName lastName");
+    // Fetch event with organizer details
+    const eventWithDetails = await Event.findByPk(event.id, {
+      include: [
+        {
+          model: User,
+          as: "organizer",
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
 
     res.status(201).json({
       status: "success",
@@ -58,42 +63,53 @@ const getEvents = async (req, res) => {
       endDate,
     } = req.query;
 
-    const query = {};
+    const where = {};
 
     if (category) {
-      const categoryDoc = await Category.findOne({ name: category });
-      if (categoryDoc) {
-        query.categories = categoryDoc._id;
-      }
+      where.category = category;
     }
 
-    if (status) query.status = status;
+    if (status) {
+      where.status = status;
+    }
+
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } },
       ];
     }
-    if (startDate) query.startDate = { $gte: new Date(startDate) };
-    if (endDate) query.endDate = { $lte: new Date(endDate) };
 
-    const events = await Event.find(query)
-      .populate("categories")
-      .populate("creator", "firstName lastName")
-      .sort({ startDate: 1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+    if (startDate) {
+      where.date = { [Op.gte]: new Date(startDate) };
+    }
 
-    const total = await Event.countDocuments(query);
+    if (endDate) {
+      where.date = { ...where.date, [Op.lte]: new Date(endDate) };
+    }
+
+    const { count, rows: events } = await Event.findAndCountAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: "organizer",
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+      order: [["date", "ASC"]],
+      limit: parseInt(limit),
+      offset: (page - 1) * limit,
+    });
 
     res.json({
       status: "success",
       data: {
         events,
         pagination: {
-          total,
+          total: count,
           page: parseInt(page),
-          pages: Math.ceil(total / limit),
+          pages: Math.ceil(count / limit),
         },
       },
     });
@@ -107,9 +123,15 @@ const getEvents = async (req, res) => {
 
 const getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id)
-      .populate("categories")
-      .populate("creator", "firstName lastName");
+    const event = await Event.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: "organizer",
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
 
     if (!event) {
       return res.status(404).json({
@@ -132,7 +154,7 @@ const getEventById = async (req, res) => {
 
 const updateEvent = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findByPk(req.params.id);
 
     if (!event) {
       return res.status(404).json({
@@ -141,19 +163,26 @@ const updateEvent = async (req, res) => {
       });
     }
 
-    // Check if user is the creator or admin
-    if (!event.creator.equals(req.user._id) && !req.user.isAdmin) {
+    // Check if user is the organizer or admin
+    if (event.organizer !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to update this event",
       });
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, categories: req.body.categoryIds },
-      { new: true, runValidators: true }
-    ).populate("categories");
+    await event.update(req.body);
+
+    // Fetch updated event with organizer details
+    const updatedEvent = await Event.findByPk(event.id, {
+      include: [
+        {
+          model: User,
+          as: "organizer",
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
 
     res.json({
       status: "success",
@@ -169,7 +198,7 @@ const updateEvent = async (req, res) => {
 
 const deleteEvent = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findByPk(req.params.id);
 
     if (!event) {
       return res.status(404).json({
@@ -178,15 +207,15 @@ const deleteEvent = async (req, res) => {
       });
     }
 
-    // Check if user is the creator or admin
-    if (!event.creator.equals(req.user._id) && !req.user.isAdmin) {
+    // Check if user is the organizer or admin
+    if (event.organizer !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to delete this event",
       });
     }
 
-    await event.remove();
+    await event.destroy();
 
     res.json({
       status: "success",
@@ -204,23 +233,54 @@ const searchNearbyEvents = async (req, res) => {
   try {
     const { latitude, longitude, radius = 10 } = req.query;
 
-    const events = await Event.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
-          },
-          $maxDistance: radius * 1000, // Convert km to meters
+    // Since we're using JSONB for location, we'll do a simple distance calculation
+    const events = await Event.findAll({
+      where: {
+        location: {
+          [Op.and]: [
+            {
+              latitude: {
+                [Op.between]: [
+                  parseFloat(latitude) - radius,
+                  parseFloat(latitude) + radius,
+                ],
+              },
+            },
+            {
+              longitude: {
+                [Op.between]: [
+                  parseFloat(longitude) - radius,
+                  parseFloat(longitude) + radius,
+                ],
+              },
+            },
+          ],
         },
       },
-    })
-      .populate("categories")
-      .populate("creator", "firstName lastName");
+      include: [
+        {
+          model: User,
+          as: "organizer",
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
+
+    // Filter events by actual distance (since we're using a bounding box)
+    const filteredEvents = events.filter((event) => {
+      const eventLoc = event.location;
+      const distance = calculateDistance(
+        parseFloat(latitude),
+        parseFloat(longitude),
+        eventLoc.latitude,
+        eventLoc.longitude
+      );
+      return distance <= radius;
+    });
 
     res.json({
       status: "success",
-      data: { events },
+      data: { events: filteredEvents },
     });
   } catch (error) {
     res.status(400).json({
@@ -229,6 +289,25 @@ const searchNearbyEvents = async (req, res) => {
     });
   }
 };
+
+// Helper function to calculate distance between two points
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(degrees) {
+  return degrees * (Math.PI / 180);
+}
 
 module.exports = {
   createEvent,
