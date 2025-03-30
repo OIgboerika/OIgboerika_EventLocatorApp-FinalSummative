@@ -48,8 +48,15 @@ const User = sequelize.define(
       defaultValue: true,
     },
     location: {
-      type: DataTypes.GEOMETRY("POINT"),
+      type: DataTypes.JSONB,
       defaultValue: null,
+      validate: {
+        isValidLocation(value) {
+          if (value && (!value.latitude || !value.longitude)) {
+            throw new Error("Location must have latitude and longitude");
+          }
+        },
+      },
     },
     preferredCategories: {
       type: DataTypes.ARRAY(DataTypes.STRING),
