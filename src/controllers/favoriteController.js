@@ -1,11 +1,11 @@
-const { Favorite, Event, Category } = require("../models");
+const { Favorite, Event, Category, User } = require("../models");
 
 const addFavorite = async (req, res) => {
   try {
     const { eventId } = req.body;
 
     // Check if event exists
-    const event = await Event.findById(eventId);
+    const event = await Event.findByPk(eventId);
     if (!event) {
       return res.status(404).json({
         status: "error",
@@ -15,8 +15,10 @@ const addFavorite = async (req, res) => {
 
     // Check if already favorited
     const existingFavorite = await Favorite.findOne({
-      user: req.user._id,
-      event: eventId,
+      where: {
+        userId: req.user.id,
+        eventId: eventId,
+      },
     });
 
     if (existingFavorite) {
@@ -28,8 +30,8 @@ const addFavorite = async (req, res) => {
 
     // Add to favorites
     await Favorite.create({
-      user: req.user._id,
-      event: eventId,
+      userId: req.user.id,
+      eventId: eventId,
     });
 
     res.status(201).json({
@@ -47,8 +49,10 @@ const addFavorite = async (req, res) => {
 const removeFavorite = async (req, res) => {
   try {
     const favorite = await Favorite.findOne({
-      user: req.user._id,
-      event: req.params.eventId,
+      where: {
+        userId: req.user.id,
+        eventId: req.params.eventId,
+      },
     });
 
     if (!favorite) {
@@ -58,7 +62,7 @@ const removeFavorite = async (req, res) => {
       });
     }
 
-    await favorite.remove();
+    await favorite.destroy();
 
     res.json({
       status: "success",
@@ -74,14 +78,24 @@ const removeFavorite = async (req, res) => {
 
 const getFavorites = async (req, res) => {
   try {
-    const favorites = await Favorite.find({ user: req.user._id })
-      .populate({
-        path: "event",
-        populate: {
-          path: "categories",
+    const favorites = await Favorite.findAll({
+      where: {
+        userId: req.user.id,
+      },
+      include: [
+        {
+          model: Event,
+          include: [
+            {
+              model: User,
+              as: "organizer",
+              attributes: ["firstName", "lastName"],
+            },
+          ],
         },
-      })
-      .sort({ createdAt: -1 });
+      ],
+      order: [["createdAt", "DESC"]],
+    });
 
     res.json({
       status: "success",
