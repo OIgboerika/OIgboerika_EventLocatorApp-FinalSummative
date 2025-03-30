@@ -1,11 +1,12 @@
 const { Rating, Event, User } = require("../models");
+const { Op } = require("sequelize");
 
 const createRating = async (req, res) => {
   try {
     const { eventId, rating, review } = req.body;
 
     // Check if event exists
-    const event = await Event.findById(eventId);
+    const event = await Event.findByPk(eventId);
     if (!event) {
       return res.status(404).json({
         status: "error",
@@ -15,8 +16,10 @@ const createRating = async (req, res) => {
 
     // Check if user has already rated this event
     const existingRating = await Rating.findOne({
-      user: req.user._id,
-      event: eventId,
+      where: {
+        userId: req.user.id,
+        eventId: eventId,
+      },
     });
 
     if (existingRating) {
@@ -28,20 +31,35 @@ const createRating = async (req, res) => {
 
     // Create rating
     const newRating = await Rating.create({
-      user: req.user._id,
-      event: eventId,
+      userId: req.user.id,
+      eventId: eventId,
       rating,
       review,
     });
 
     // Update event's average rating and total ratings
-    await event.updateRating(rating);
+    const allRatings = await Rating.findAll({
+      where: { eventId: eventId },
+    });
+
+    const totalRatings = allRatings.length;
+    const averageRating =
+      allRatings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings;
+
+    await event.update({
+      averageRating,
+      totalRatings,
+    });
 
     // Fetch rating with user details
-    const ratingWithUser = await Rating.findById(newRating._id).populate(
-      "user",
-      "firstName lastName"
-    );
+    const ratingWithUser = await Rating.findByPk(newRating.id, {
+      include: [
+        {
+          model: User,
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
 
     res.status(201).json({
       status: "success",
@@ -60,7 +78,7 @@ const updateRating = async (req, res) => {
     const { rating, review } = req.body;
     const ratingId = req.params.id;
 
-    const existingRating = await Rating.findById(ratingId);
+    const existingRating = await Rating.findByPk(ratingId);
     if (!existingRating) {
       return res.status(404).json({
         status: "error",
@@ -69,7 +87,7 @@ const updateRating = async (req, res) => {
     }
 
     // Check if user owns this rating
-    if (!existingRating.user.equals(req.user._id)) {
+    if (existingRating.userId !== req.user.id) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to update this rating",
@@ -77,29 +95,38 @@ const updateRating = async (req, res) => {
     }
 
     // Update rating
-    existingRating.rating = rating;
-    existingRating.review = review;
-    await existingRating.save();
+    await existingRating.update({
+      rating,
+      review,
+    });
 
     // Update event's average rating
-    const event = await Event.findById(existingRating.event);
+    const event = await Event.findByPk(existingRating.eventId);
     if (event) {
       // Recalculate average rating
-      const ratings = await Rating.find({ event: event._id });
+      const ratings = await Rating.findAll({
+        where: { eventId: event.id },
+      });
+
       const totalRatings = ratings.length;
       const averageRating =
         ratings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings;
 
-      event.averageRating = averageRating;
-      event.totalRatings = totalRatings;
-      await event.save();
+      await event.update({
+        averageRating,
+        totalRatings,
+      });
     }
 
     // Fetch updated rating with user details
-    const updatedRating = await Rating.findById(ratingId).populate(
-      "user",
-      "firstName lastName"
-    );
+    const updatedRating = await Rating.findByPk(ratingId, {
+      include: [
+        {
+          model: User,
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+    });
 
     res.json({
       status: "success",
@@ -117,7 +144,7 @@ const deleteRating = async (req, res) => {
   try {
     const ratingId = req.params.id;
 
-    const rating = await Rating.findById(ratingId);
+    const rating = await Rating.findByPk(ratingId);
     if (!rating) {
       return res.status(404).json({
         status: "error",
@@ -126,7 +153,7 @@ const deleteRating = async (req, res) => {
     }
 
     // Check if user owns this rating
-    if (!rating.user.equals(req.user._id)) {
+    if (rating.userId !== req.user.id) {
       return res.status(403).json({
         status: "error",
         message: "Not authorized to delete this rating",
@@ -134,25 +161,29 @@ const deleteRating = async (req, res) => {
     }
 
     // Store event ID before deleting rating
-    const eventId = rating.event;
+    const eventId = rating.eventId;
 
     // Delete rating
-    await rating.remove();
+    await rating.destroy();
 
     // Update event's average rating
-    const event = await Event.findById(eventId);
+    const event = await Event.findByPk(eventId);
     if (event) {
       // Recalculate average rating
-      const ratings = await Rating.find({ event: eventId });
+      const ratings = await Rating.findAll({
+        where: { eventId: eventId },
+      });
+
       const totalRatings = ratings.length;
       const averageRating =
         totalRatings > 0
           ? ratings.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings
           : 0;
 
-      event.averageRating = averageRating;
-      event.totalRatings = totalRatings;
-      await event.save();
+      await event.update({
+        averageRating,
+        totalRatings,
+      });
     }
 
     res.json({
@@ -171,9 +202,16 @@ const getEventRatings = async (req, res) => {
   try {
     const { eventId } = req.params;
 
-    const ratings = await Rating.find({ event: eventId })
-      .populate("user", "firstName lastName")
-      .sort({ createdAt: -1 });
+    const ratings = await Rating.findAll({
+      where: { eventId: eventId },
+      include: [
+        {
+          model: User,
+          attributes: ["firstName", "lastName"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
 
     res.json({
       status: "success",
