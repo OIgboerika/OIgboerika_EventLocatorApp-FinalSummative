@@ -10,7 +10,7 @@ const options = {
     },
     servers: [
       {
-        url: "https://oigboerika-eventlocatorapp.onrender.com/api",
+        url: "https://oigboerika-eventlocatorapp.onrender.com",
         description: "Production server",
       },
     ],
@@ -49,11 +49,6 @@ const options = {
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
   },
   apis: ["./src/routes/*.js"],
 };
