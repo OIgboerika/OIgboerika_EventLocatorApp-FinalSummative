@@ -6,8 +6,14 @@ const Rating = require("./Rating");
 const Favorite = require("./Favorite");
 
 // Define associations
-User.hasMany(Event, { foreignKey: "organizer" });
-Event.belongsTo(User, { foreignKey: "organizer" });
+User.hasMany(Event, {
+  foreignKey: "organizer",
+  as: "organizedEvents",
+});
+Event.belongsTo(User, {
+  foreignKey: "organizer",
+  as: "organizer",
+});
 
 User.hasMany(Rating, { foreignKey: "userId" });
 Rating.belongsTo(User, { foreignKey: "userId" });
