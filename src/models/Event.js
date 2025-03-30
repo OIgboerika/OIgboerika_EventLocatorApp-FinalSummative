@@ -22,8 +22,15 @@ const Event = sequelize.define(
       allowNull: false,
     },
     location: {
-      type: DataTypes.GEOMETRY("POINT"),
+      type: DataTypes.JSONB,
       allowNull: false,
+      validate: {
+        isValidLocation(value) {
+          if (!value || !value.latitude || !value.longitude) {
+            throw new Error("Location must have latitude and longitude");
+          }
+        },
+      },
     },
     address: {
       type: DataTypes.STRING,
@@ -65,10 +72,6 @@ const Event = sequelize.define(
   {
     timestamps: true,
     indexes: [
-      {
-        fields: ["location"],
-        using: "GIST",
-      },
       {
         fields: ["category"],
       },
