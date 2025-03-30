@@ -10,8 +10,8 @@ const options = {
     },
     servers: [
       {
-        url: "https://oigboerika-eventlocatorapp.onrender.com",
-        description: "Production server",
+        url: "https://oigboerika-eventlocatorapp.onrender.com/api",
+        description: "Production Server",
       },
     ],
     components: {
