@@ -10,17 +10,37 @@ const options = {
     },
     servers: [
       {
-        url:
-          process.env.NODE_ENV === "production"
-            ? "https://oigboerika-eventlocatorapp.onrender.com/api"
-            : "http://localhost:3000/api",
-        description:
-          process.env.NODE_ENV === "production"
-            ? "Production server"
-            : "Development server",
+        url: "https://oigboerika-eventlocatorapp.onrender.com/api",
+        description: "Production server",
       },
     ],
     components: {
+      schemas: {
+        User: {
+          type: "object",
+          required: ["email", "password", "firstName", "lastName"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              description: "User's email address",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              description: "User's password",
+            },
+            firstName: {
+              type: "string",
+              description: "User's first name",
+            },
+            lastName: {
+              type: "string",
+              description: "User's last name",
+            },
+          },
+        },
+      },
       securitySchemes: {
         bearerAuth: {
           type: "http",
@@ -35,7 +55,7 @@ const options = {
       },
     ],
   },
-  apis: ["./src/routes/*.js"], // Path to the API routes
+  apis: ["./src/routes/*.js"],
 };
 
 const specs = swaggerJsdoc(options);
