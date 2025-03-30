@@ -36,8 +36,13 @@ const initializeApp = async () => {
           ? [
               "https://oigboerika-eventlocatorapp.onrender.com",
               /\.onrender\.com$/,
+              "https://oigboerika-eventlocatorapp.onrender.com/api-docs",
             ]
-          : ["http://localhost:3000", "http://localhost:10000"],
+          : [
+              "http://localhost:3001",
+              "http://localhost:10000",
+              "http://localhost:3001/api-docs",
+            ],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
       credentials: true,
