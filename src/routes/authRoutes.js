@@ -13,6 +13,7 @@ const {
   getProfile,
   updateProfile,
 } = require("../controllers/authController");
+const { User } = require("../models");
 
 /**
  * @swagger
@@ -156,5 +157,22 @@ router.put(
   validate,
   updateProfile
 );
+
+// Temporary endpoint to make user admin (remove in production)
+router.post("/make-admin", authenticate, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    await user.update({ role: "admin" });
+    res.json({
+      status: "success",
+      message: "User role updated to admin",
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
 
 module.exports = router;
