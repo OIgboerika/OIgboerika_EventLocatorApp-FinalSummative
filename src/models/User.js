@@ -52,8 +52,22 @@ const User = sequelize.define(
       defaultValue: null,
       validate: {
         isValidLocation(value) {
-          if (value && (!value.latitude || !value.longitude)) {
-            throw new Error("Location must have latitude and longitude");
+          if (value) {
+            // Handle coordinates array format
+            if (
+              value.coordinates &&
+              Array.isArray(value.coordinates) &&
+              value.coordinates.length === 2
+            ) {
+              value.latitude = value.coordinates[0];
+              value.longitude = value.coordinates[1];
+              delete value.coordinates;
+              return;
+            }
+            // Handle direct latitude/longitude format
+            if (!value.latitude || !value.longitude) {
+              throw new Error("Location must have latitude and longitude");
+            }
           }
         },
       },
