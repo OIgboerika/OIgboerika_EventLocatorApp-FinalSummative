@@ -70,7 +70,7 @@ event-locator/
 
 Below is the database schema for the Event Locator App:
 
-![Database Schema](images/Igboerika Onochie Event Locator App (1).png)
+![Database Schema](./images/Igboerika%20Onochie%20Event%20Locator%20App%20(1).png)
 
 ## Deployment to Render.com
 
