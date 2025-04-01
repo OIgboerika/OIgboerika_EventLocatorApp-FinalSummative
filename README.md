@@ -72,6 +72,12 @@ Below is the database schema for the Event Locator App:
 
 ![Database Schema](./images/Igboerika%20Onochie%20Event%20Locator%20App%20(1).png)
 
+## Endpoints on Swagger UI
+
+Below is the Swagger UI for the Event Locator App:
+
+![Swagger UI](./images/Swagger%20UI%20endpoints.png)
+
 ## Deployment to Render.com
 
 1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
