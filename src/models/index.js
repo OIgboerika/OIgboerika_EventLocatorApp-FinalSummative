@@ -27,10 +27,6 @@ Favorite.belongsTo(User, { foreignKey: "userId" });
 Event.hasMany(Favorite, { foreignKey: "eventId" });
 Favorite.belongsTo(Event, { foreignKey: "eventId" });
 
-// In your models/index.js or somewhere after both models are defined
-Event.belongsTo(User, { foreignKey: 'organizerId', as: 'organizer' });
-User.hasMany(Event, { foreignKey: 'organizerId', as: 'events' });
-
 module.exports = {
   sequelize,
   User,
