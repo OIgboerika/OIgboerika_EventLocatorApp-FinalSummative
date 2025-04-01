@@ -66,6 +66,12 @@ event-locator/
 └── README.md           # Project documentation
 ```
 
+## Database Schema
+
+Below is the database schema for the Event Locator App:
+
+![Database Schema](images/Igboerika Onochie Event Locator App (1).png)
+
 ## Deployment to Render.com
 
 1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
