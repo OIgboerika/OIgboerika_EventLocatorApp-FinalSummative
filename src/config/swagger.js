@@ -10,8 +10,14 @@ const options = {
     },
     servers: [
       {
-        url: "https://oigboerika-eventlocatorapp.onrender.com/api",
-        description: "Production server",
+        url:
+          process.env.NODE_ENV === "production"
+            ? "https://oigboerika-eventlocatorapp.onrender.com/api"
+            : "http://localhost:3001/api",
+        description:
+          process.env.NODE_ENV === "production"
+            ? "Production server"
+            : "Development server",
       },
     ],
     components: {
@@ -29,7 +35,7 @@ const options = {
       },
     ],
   },
-  apis: ["./src/routes/*.js"], // Path to the API routes
+  apis: ["./src/routes/*.js"],
 };
 
 const specs = swaggerJsdoc(options);

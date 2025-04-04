@@ -42,6 +42,12 @@ const initializeApp = async () => {
               "http://localhost:3001",
               "http://localhost:10000",
               "http://localhost:3001/api-docs",
+              "http://localhost:3000",
+              "http://localhost:3000/api-docs",
+              "http://127.0.0.1:3001",
+              "http://127.0.0.1:3000",
+              "http://127.0.0.1:3001/api-docs",
+              "http://127.0.0.1:3000/api-docs",
             ],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
@@ -66,18 +72,20 @@ const initializeApp = async () => {
     app.options("*", cors(corsOptions));
 
     // API Documentation
+    const swaggerOptions = {
+      explorer: true,
+      customCss: ".swagger-ui .topbar { display: none }",
+      customSiteTitle: "Event Locator API Documentation",
+      swaggerOptions: {
+        persistAuthorization: true,
+        tryItOutEnabled: true,
+      },
+    };
+
     app.use(
       "/api-docs",
       swaggerUi.serve,
-      swaggerUi.setup(specs, {
-        explorer: true,
-        customCss: ".swagger-ui .topbar { display: none }",
-        customSiteTitle: "Event Locator API Documentation",
-        swaggerOptions: {
-          persistAuthorization: true,
-          tryItOutEnabled: true,
-        },
-      })
+      swaggerUi.setup(specs, swaggerOptions)
     );
 
     // Routes
