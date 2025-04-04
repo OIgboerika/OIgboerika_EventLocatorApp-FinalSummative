@@ -233,6 +233,25 @@ const searchNearbyEvents = async (req, res) => {
   try {
     const { latitude, longitude, radius = 10 } = req.query;
 
+    // Validate parameters
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        status: "error",
+        message: "Latitude and longitude are required",
+      });
+    }
+
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    const rad = parseFloat(radius);
+
+    if (isNaN(lat) || isNaN(lng) || isNaN(rad)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Latitude, longitude, and radius must be valid numbers",
+      });
+    }
+
     // Since we're using JSONB for location, we'll do a simple distance calculation
     const events = await Event.findAll({
       where: {
@@ -240,18 +259,12 @@ const searchNearbyEvents = async (req, res) => {
           [Op.and]: [
             {
               latitude: {
-                [Op.between]: [
-                  parseFloat(latitude) - radius,
-                  parseFloat(latitude) + radius,
-                ],
+                [Op.between]: [lat - rad, lat + rad],
               },
             },
             {
               longitude: {
-                [Op.between]: [
-                  parseFloat(longitude) - radius,
-                  parseFloat(longitude) + radius,
-                ],
+                [Op.between]: [lng - rad, lng + rad],
               },
             },
           ],
@@ -270,12 +283,12 @@ const searchNearbyEvents = async (req, res) => {
     const filteredEvents = events.filter((event) => {
       const eventLoc = event.location;
       const distance = calculateDistance(
-        parseFloat(latitude),
-        parseFloat(longitude),
+        lat,
+        lng,
         eventLoc.latitude,
         eventLoc.longitude
       );
-      return distance <= radius;
+      return distance <= rad;
     });
 
     res.json({

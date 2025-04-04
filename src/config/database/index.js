@@ -18,7 +18,7 @@ const setupDatabase = async () => {
     console.log("Database connected successfully");
 
     // Sync database (create tables if they don't exist)
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ force: process.env.NODE_ENV === "development" });
     console.log("Database tables synchronized");
   } catch (error) {
     console.error("Database connection failed:", error);
